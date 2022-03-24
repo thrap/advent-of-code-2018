@@ -1,6 +1,6 @@
 import run from "aocrunner"
 
-const part1 = (input) => {
+const react = input => {
   var str = input.replace(/([A-Z])/g, (a) => '#'+a.toLowerCase())
 
   const replace = str => str.replace(/#(.)\1|(?<!#)(.)#\2/g, '')
@@ -12,26 +12,22 @@ const part1 = (input) => {
   return str.replace(/#/g, '').length
 }
 
-const part2 = (input) => {
+const part1 = (input) => react(input)
 
-  return
+const part2 = (input) => {
+  const regex = c => new RegExp(c+'|'+c.toUpperCase(), 'g')
+
+  const chars = new Set(input.split('').map(x => x.toLowerCase()))
+
+  const lengths = [...chars].map(c => react(input.replace(regex(c), '')))
+  return Math.min(...lengths)
 }
 
-const part1Input = `dabAcCaCBAcCcaDA`
-const part2Input = part1Input
 run({
   part1: {
-    tests: [
-      { input: `dabAcCaCBAcCcaDA`, expected: 10 },
-      { input: `aabAAB`, expected: 6 },
-    ],
     solution: part1,
   },
   part2: {
-    tests: [
-      { input: part2Input, expected: '' },
-    ],
     solution: part2,
   },
-  onlyTests: false,
 })
