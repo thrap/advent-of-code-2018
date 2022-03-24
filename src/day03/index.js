@@ -20,7 +20,24 @@ const part1 = (rawInput) => {
 
 const part2 = (rawInput) => {
   const input = parseInput(rawInput)
+  const count = {}
+  input.forEach(([, dx, dy, width, height]) => {
+    for (var x = dx; x < dx+width; x++) {
+      for (var y = dy; y < dy+height; y++) {
+        count[[x,y]] = (count[[x,y]] || 0) + 1
+      }
+    }
+  })
 
+  return input.find(([, dx, dy, width, height]) => {
+    for (var x = dx; x < dx+width; x++) {
+      for (var y = dy; y < dy+height; y++) {
+        if (count[[x,y]] > 1)
+          return false
+      }
+    }
+    return true
+  })[0]
 }
 
 const part1Input = `#1 @ 1,3: 4x4
