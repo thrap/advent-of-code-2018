@@ -12,44 +12,51 @@ const part1 = (input) => {
   const nodes = Object.keys(graph).sort()
 
   const done = {}
+
   const isReady = (n) => !done[n] && graph[n].every(x => done[x])
+  const process = (n) => done[n] = true && n
 
-  var str = ''
-  for (var i = 0; i < nodes.length; i++) {
-    const node = nodes.find(isReady)
-    str += node
-    done[node] = true
-  }
-
-  return str
+  return nodes.map(_ => process(nodes.find(isReady))).join('')
 }
 
 const part2 = (input) => {
-  const nodes = parse(input)
+  const graph = parse(input)
+  const nodes = Object.keys(graph).sort()
 
-  return
+  const done = {}
+  const workers = Array(5).fill(0).map((_, i) => i)
+  const processing = workers.map(_ => '')
+  var work = workers.map(_ => 1)
+
+  const isReady = (n) => !done[n] && graph[n].every(x => done[x]) && !processing.includes(n)
+
+  const process = (worker) => {
+    const node = nodes.find(isReady)
+    if (!node || work[worker] > 0) return
+    work[worker] = node.charCodeAt(0) - 4
+    processing[worker] = node
+  }
+
+  const finish = (worker) => {
+    if (work[worker] > 0) return
+    var node = processing[worker]
+    done[node] = true
+    processing[worker] = ''
+  }
+
+  for(var i = 0; work.some(x => x > 0); i++) {
+    work = work.map(x => x - 1)
+    workers.forEach(finish)
+    workers.forEach(process)
+  }
+  return i-1
 }
 
-const part1Input = `Step C must be finished before step A can begin.
-Step C must be finished before step F can begin.
-Step A must be finished before step B can begin.
-Step A must be finished before step D can begin.
-Step B must be finished before step E can begin.
-Step D must be finished before step E can begin.
-Step F must be finished before step E can begin.`
-const part2Input = part1Input
 run({
   part1: {
-    tests: [
-      { input: part1Input, expected: 'CABDFE' },
-    ],
     solution: part1,
   },
   part2: {
-    tests: [
-      { input: part2Input, expected: '' },
-    ],
     solution: part2,
   },
-  onlyTests: false,
 })
