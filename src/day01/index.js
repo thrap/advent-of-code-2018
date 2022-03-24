@@ -1,18 +1,19 @@
 import run from "aocrunner"
 
-const parseInput = rawInput => rawInput.split('\n').map(x => +x)
+const parse = input => input.split('\n').map(x => +x)
 
-const part1 = (rawInput) => {
-  const input = parseInput(rawInput)
-  return input.reduce((acc, x) => acc + x)
+const part1 = (input) => parse(input).reduce((acc, x) => acc + x)
 
-  return
-}
-
-const part2 = (rawInput) => {
-  const input = parseInput(rawInput)
-
-  return
+const part2 = (input) => {
+  const change = parse(input)
+  var freq = 0
+  const seen = {}
+  for (var i = 0; true; i++) {
+    freq += change[i % change.length]
+    if (seen[freq])
+      return freq
+    seen[freq] = true
+  }
 }
 
 run({
