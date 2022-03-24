@@ -1,46 +1,34 @@
 import run from "aocrunner"
+const _ = { sum : arr => arr.reduce((acc, x) => acc + x, 0) }
 
-const parseInput = rawInput => rawInput.split(' ').map(x => +x)
-
-const part1 = (rawInput) => {
-  const input = parseInput(rawInput)
-
+const tree = input => {
+  const header = input.split(' ').map(x => +x)
   var i = 0
-  var sum = 0
-  const rec = () => {
-    const children = input[i++]
-    const metadata = input[i++]
+  const node = () => {
+    const children = header[i++]
+    const nodes = []
+    const metadata = header[i++]
+    const vals = []
     for (var child = 0; child < children; child++) {
-      rec()
+      nodes.push(node())
     }
     for (var meta = 0; meta < metadata; meta++) {
-      sum += input[i++]
+      vals.push(header[i++])
     }
+    return { nodes, vals }
   }
-  rec()
-  return sum
+  return node()
 }
 
-const part2 = (rawInput) => {
-  const input = parseInput(rawInput)
+const part1 = ({nodes, vals}) => _.sum(vals) + _.sum(nodes.map(part1))
 
+const part2 = ({nodes, vals}) => nodes.length ? _.sum(vals.map(i => nodes[i-1]).filter(x => x).map(part2)) : _.sum(vals)
 
-}
-
-const part1Input = `2 3 0 3 10 11 12 1 1 0 1 99 2 1 1 2`
-const part2Input = part1Input
 run({
   part1: {
-    tests: [
-      { input: part1Input, expected: 138 },
-    ],
-    solution: part1,
+    solution: input => part1(tree(input)),
   },
   part2: {
-    tests: [
-      { input: part2Input, expected: '' },
-    ],
-    solution: part2,
+    solution: input => part2(tree(input)),
   },
-  onlyTests: false,
 })
