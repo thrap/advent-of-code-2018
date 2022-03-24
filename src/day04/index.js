@@ -1,14 +1,12 @@
 import run from "aocrunner"
 
-const parseInput = rawInput => rawInput.split('\n').map(line => {
-  const date = /\[(\d+)-(\d+)-(\d+) (\d+):(\d+)\] (.*)/
-  const [year, month, day, hour, minute, rest] = line.match(date).slice(1)
+const parseSleep = rawInput => {
+  const input = rawInput.split('\n').map(line => {
+    const date = /\[(\d+)-(\d+)-(\d+) (\d+):(\d+)\] (.*)/
+    const [year, month, day, hour, minute, rest] = line.match(date).slice(1)
 
-  return [new Date(`${year}-${month}-${day}T${hour}:${minute}`), rest]
-})
-
-const part1 = (rawInput) => {
-  const input = parseInput(rawInput).sort((a, b) => a[0]-b[0])
+    return [new Date(`${year}-${month}-${day}T${hour}:${minute}`), rest]
+  }).sort((a, b) => a[0]-b[0])
 
   const begin = /Guard #(\d+) begins shift/
   const sleep = {}
@@ -27,10 +25,7 @@ const part1 = (rawInput) => {
       i++
     }
   }
-
-  const guard = maxBy(sleepCount)
-
-  return guard*maxBy(sleep[guard])
+  return [sleep, sleepCount]
 }
 
 const maxBy = obj => {
@@ -38,42 +33,34 @@ const maxBy = obj => {
   return Object.keys(obj).find(x => obj[x] == max)
 }
 
-const part2 = (rawInput) => {
-  const input = parseInput(rawInput)
+const part1 = (rawInput) => {
+  const [sleep, sleepCount] = parseSleep(rawInput)
 
-  return
+  const guard = maxBy(sleepCount)
+  return guard*maxBy(sleep[guard])
 }
 
-const part1Input = `[1518-11-01 00:00] Guard #10 begins shift
-[1518-11-01 00:05] falls asleep
-[1518-11-01 00:25] wakes up
-[1518-11-01 00:30] falls asleep
-[1518-11-01 00:55] wakes up
-[1518-11-01 23:58] Guard #99 begins shift
-[1518-11-02 00:40] falls asleep
-[1518-11-02 00:50] wakes up
-[1518-11-03 00:05] Guard #10 begins shift
-[1518-11-03 00:24] falls asleep
-[1518-11-03 00:29] wakes up
-[1518-11-04 00:02] Guard #99 begins shift
-[1518-11-04 00:36] falls asleep
-[1518-11-04 00:46] wakes up
-[1518-11-05 00:03] Guard #99 begins shift
-[1518-11-05 00:45] falls asleep
-[1518-11-05 00:55] wakes up`
-const part2Input = part1Input
+const part2 = (rawInput) => {
+  const [sleep] = parseSleep(rawInput)
+
+  var max = 0
+  var ans = 0
+  Object.keys(sleep).forEach(guard => {
+    var minute = maxBy(sleep[guard])
+    if (sleep[guard][minute] > max) {
+      max = sleep[guard][minute]
+      ans = guard*minute
+    }
+  })
+
+  return ans
+}
+
 run({
   part1: {
-    tests: [
-      { input: part1Input, expected: '' },
-    ],
     solution: part1,
   },
   part2: {
-    tests: [
-      { input: part2Input, expected: '' },
-    ],
     solution: part2,
   },
-  onlyTests: false,
 })
