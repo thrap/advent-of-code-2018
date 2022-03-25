@@ -1,9 +1,7 @@
 import run from "aocrunner"
 
-const parseInput = rawInput => +rawInput
-
-const part1 = (rawInput) => {
-  const input = parseInput(rawInput)
+const part1 = (input) => {
+  const steps = +input
 
   const recipes = [3, 7]
 
@@ -15,10 +13,9 @@ const part1 = (rawInput) => {
     recipes.push(sum % 10)
   }
 
-
   var a = 0
   var b = 1
-  for (var i = 0; recipes.length < input + 10; i++) {
+  for (var i = 0; recipes.length < steps + 10; i++) {
     const aVal = recipes[a]
     const bVal = recipes[b]
     combine(aVal, bVal)
@@ -26,17 +23,41 @@ const part1 = (rawInput) => {
     b = (b + bVal+1) % recipes.length
   }
 
-  return recipes.slice(input, input+10).join('')
+  return recipes.slice(steps, steps+10).join('')
 }
 
-const part2 = (rawInput) => {
-  const input = parseInput(rawInput)
+const part2 = (input) => {
+  const goal = +input
+  const recipes = [3, 7]
 
-  return
+  var a = 0
+  var b = 1
+  var acc = 0
+
+  const limit = Math.pow(10, input.length)
+  for (var i = 0; true; i++) {
+    const aVal = recipes[a]
+    const bVal = recipes[b]
+
+    var sum = aVal + bVal
+    if (sum >= 10) {
+      recipes.push(Math.floor(sum/10))
+
+      acc = (acc * 10 + Math.floor(sum/10))%limit
+      if (acc == goal)
+        return recipes.length-input.length
+    }
+    recipes.push(sum % 10)
+
+    acc = (acc * 10 + sum % 10)%limit
+    if (acc == goal)
+      return recipes.length-input.length
+
+    a = (a + aVal+1) % recipes.length
+    b = (b + bVal+1) % recipes.length
+  }
 }
 
-const part1Input = ``
-const part2Input = part1Input
 run({
   part1: {
     tests: [
@@ -46,6 +67,10 @@ run({
   },
   part2: {
     tests: [
+      { input: '51589', expected: 9 },
+      { input: '01245', expected: 5 },
+      { input: '92510', expected: 18 },
+      { input: '59414', expected: 2018 },
     ],
     solution: part2,
   },
