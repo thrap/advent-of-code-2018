@@ -1,80 +1,42 @@
 import run from "aocrunner"
 
-const grid = serial => {
-  const grid = [...Array(301)].map((_,i) => [...Array(301)].map((_, j) => powerLevel(i, j, serial)))
-  return grid
-}
+const parseGrid = s => [...Array(301)].map((_,i) => [...Array(301)].map((_, j) => power(i, j, s)))
 
-const powerLevel = (x, y, serial) => {
-  const rackId = x + 10
-  var powerLevel = (rackId * y + serial) * rackId
+const power = (x, y, s) => Math.floor((((x + 10) * y + s) * (x + 10))/100)%10 - 5
 
-  const str = '00'+powerLevel
-  powerLevel = +str[str.length-3]
-  return powerLevel - 5
-}
+const maxPower = (input, minSize, maxSize) => {
+  const grid = parseGrid(+input)
+  var maxSum = 0
+  var ans
 
-const square = (x, y, size, grid) => {
-  var sum = 0
-  for (var dx = 0; dx < size; dx++) {
-    for (var dy = 0; dy < size; dy++) {
-      if (x+dx > 300 && y+dy > 300) throw 1
-
-      sum += grid[x+dx][y+dy]
+  const rows = [...Array(301)].map(_ => Array(301).fill(0))
+  const cols = [...Array(301)].map(_ => Array(301).fill(0))
+  const squareSum = [...Array(301)].map(_ => Array(301).fill(0))
+  for (var size = 1; size <= maxSize; size++) {
+    for (var j = 1; j <= 300; j++) {
+      for (var i = 1; i <= 300; i++) {
+        rows[j][i] += grid[j]?.[i+size-1] || 0
+        cols[j][i] += grid[j+size-1]?.[i] || 0
+      }
     }
-  }
-  return sum
-}
-
-const maxSquare = (grid, size) => {
-  var max = square(1, 1, size, grid)
-  var ans = '1,1'
-  for (var x = 1; x <= 300-size+1; x++) {
-    for (var y = 1; y <= 300-size+1; y++) {
-      var sum = square(x, y, size, grid)
-
-      if (sum > max) {
-        max = sum
-        ans = x+','+y
+    for (var j = 1; j+size-1 <= 300; j++) {
+      for (var i = 1; i+size-1 <= 300; i++) {
+        squareSum[j][i] += cols[j][i+size-1]+rows[j+size-1][i]-grid[j+size-1][i+size-1]
+        if (size >= minSize && maxSum < squareSum[j][i]) {
+          maxSum = squareSum[j][i]
+          ans = j+','+i+','+size
+        }
       }
     }
   }
-  return [ans, max]
-}
-
-const part1 = (input) => {
-  return maxSquare(grid(+input), 3)[0]
-}
-
-const part2 = (input) => {
-  const arr = grid(+input)
-  var max = 0
-  var ans
-  for (var size = 1; size <= 300; size++) {
-    const localMax = maxSquare(arr, size)
-    if (max < localMax[1]) {
-      max = localMax[1]
-      ans = localMax[0]+','+size
-    }
-    if (localMax[1] < 0)
-      return ans
-  }
+  return ans
 }
 
 run({
   part1: {
-    tests: [
-      { input: '18', expected: '33,45' },
-      { input: '42', expected: '21,61' },
-    ],
-    solution: part1,
+    solution: (input) => maxPower(input, 3, 3).replace(/,[^,]+$/,''),
   },
   part2: {
-    tests: [
-      { input: '18', expected: '90,269,16' },
-      { input: '42', expected: '232,251,12' },
-    ],
-    solution: part2,
+    solution: (input) => maxPower(input, 1, 300),
   },
-  onlyTests: false,
 })
