@@ -1,18 +1,13 @@
 import run from "aocrunner"
 
-const parseInput = input => +input
 const grid = serial => {
   const grid = [...Array(301)].map((_,i) => [...Array(301)].map((_, j) => powerLevel(i, j, serial)))
   return grid
 }
 
 const powerLevel = (x, y, serial) => {
-  if (x > 300 || y > 300) throw 1
-
   const rackId = x + 10
-  var powerLevel = rackId * y
-  powerLevel += serial
-  powerLevel *= rackId
+  var powerLevel = (rackId * y + serial) * rackId
 
   const str = '00'+powerLevel
   powerLevel = +str[str.length-3]
@@ -48,13 +43,22 @@ const maxSquare = (grid, size) => {
 }
 
 const part1 = (input) => {
-  const serial = parseInput(input)
-
-  return maxSquare(grid(serial), 3)[0]
+  return maxSquare(grid(+input), 3)[0]
 }
 
-const part2 = (rawInput) => {
-
+const part2 = (input) => {
+  const arr = grid(+input)
+  var max = 0
+  var ans
+  for (var size = 1; size <= 300; size++) {
+    const localMax = maxSquare(arr, size)
+    if (max < localMax[1]) {
+      max = localMax[1]
+      ans = localMax[0]+','+size
+    }
+    if (localMax[1] < 0)
+      return ans
+  }
 }
 
 run({
@@ -67,6 +71,8 @@ run({
   },
   part2: {
     tests: [
+      { input: '18', expected: '90,269,16' },
+      { input: '42', expected: '232,251,12' },
     ],
     solution: part2,
   },
