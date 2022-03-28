@@ -81,20 +81,7 @@ const print = (grid, units, diff) => {
   console.log()
 }
 
-
-const part1 = (input) => {
-  printed = {}
-  //console.log(input);
-  var PRINTROUND = -1
-  if(/\d/.test(input)) {
-    PRINTROUND = input.split('\n')[0]
-    input = input.split('\n').slice(1).join('\n')
-  }
-
-  var [map, units] = parseInput(input)
-  var SANITY_SUM = 0
-
-
+const simulate = (map, units, prints, part2) => {
   const move = unit => {
     const gridStr = toStr(map, units).split('\n')
     const grid = gridStr.map(l => l.split(''))
@@ -106,7 +93,6 @@ const part1 = (input) => {
     }
     const targets = units.filter(t => t.type != unit.type)
     const unitPos = [unit.i, unit.j]
-    const diff = {[unitPos]: '█'}
 
     const around = (unit) => dirs.map(([di, dj]) => [unit.i+di, unit.j+dj])
     const emptyAround = (unit) => around(unit).filter(isEmpty)
@@ -116,8 +102,6 @@ const part1 = (input) => {
     }
 
     const range = targets.map(emptyAround).flat().sort((a, b) => manhattan(a, unitPos)-manhattan(b, unitPos))
-
-    range.forEach(([i, j]) => diff[[i,j]] = '?')
 
     var minLength = Number.MAX_VALUE
     const allCandidates = range.map((pos) => {
@@ -134,39 +118,18 @@ const part1 = (input) => {
     }).filter(x => x[1] == minLength)
     const candidates = allCandidates.map(x => x[0])
 
-
-    candidates.forEach(([i, j]) => diff[[i,j]] = '!')
     const chosen = candidates.sort(sort)[0]
     if (!chosen) {
       return
     }
-    diff[chosen] = '+'
-    SANITY_SUM += 100*chosen[0]+chosen[1]
-
     const newPos = emptyAround(unit).filter(pos => aStar(gridStr, pos, chosen) == minLength-1).sort(sort)[0]
     if (!newPos) {
       return
     }
-    diff[newPos] = '▒'
-    if (unit.i == 15 && unit.j == 8 && newPos[1] == 7) {
-      console.log(units);
-      console.log(newPos);
-      diff[[21, 12]] = "$"
-      console.log(toStr(map, units, diff))
-      console.log(candidates);
 
-      console.log(allCandidates);
-      console.log(targets.map(emptyAround).flat().sort((a, b) => manhattan(a, unitPos)-manhattan(b, unitPos)));
-      console.log(emptyAround(unit).filter(pos => aStar(gridStr, pos, chosen) == minLength-1));
-      console.log(aStar(gridStr, unitPos, [21, 12]));
-      throw 1
-    }
-    //print(grid, units, diff)
     unit.i = newPos[0]
     unit.j = newPos[1]
   }
-
-
 
   const sort = (a, b) => a[0]*100 + a[1] - (b[0]*100 + b[1])
 
@@ -177,6 +140,7 @@ const part1 = (input) => {
     if (!target) return
 
     target.hp -= unit.attack
+    if (part2 && target.hp <= 0 && target.type == 'E') throw 1
     if (target.hp <= 0)
       units = units.filter(u => u.hp > 0)
   }
@@ -195,34 +159,37 @@ const part1 = (input) => {
   for (var turns = 0; turns < 1900; turns++) {
     const sorted = units.sort((a, b) => sort([a.i, a.j], [b.i, b.j]))
 
-    if (PRINTROUND != -1 || input.length >= 100)
+    if (prints)
       console.log("Turn", turns) | print(map, units)
-    if (PRINTROUND == turns) {
-      return toStr(map, units)
-    }
 
     const acted = sorted.every(act)
     if (units.every(unit => unit.type == units[0].type)) {
-      console.log(acted);
-      console.log(turns);
-      print(map, units)
-      console.log();
-      console.log((turns) * units.reduce((acc, u) => acc+u.hp, 0));
-      console.log((turns+1) * units.reduce((acc, u) => acc+u.hp, 0));
+      if (prints) {
+        console.log(acted);
+        console.log(turns);
+        print(map, units)
+        console.log();
+        console.log((turns) * units.reduce((acc, u) => acc+u.hp, 0));
+        console.log((turns+1) * units.reduce((acc, u) => acc+u.hp, 0));
+      }
       return ((acted ? 1: 0) + turns) * units.reduce((acc, u) => acc+u.hp, 0)
     }
   }
-
-  console.log(SANITY_SUM);
-  console.log(53894);
-
   return
 }
 
-const part2 = (rawInput) => {
-  const input = parseInput(rawInput)
+const part1 = (input) => {
+  printed = {}
+  var [map, units] = parseInput(input)
 
-  return
+  return simulate(map, units)
+}
+
+const part2 = (input) => {
+  printed = {}
+  var [map, units] = parseInput(input)
+
+  return simulate(map, units.map(u => u.type == 'E' ? {...u, attack:25} : u), false, true)
 }
 
 run({
