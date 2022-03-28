@@ -43,12 +43,12 @@ const aStar = (grid, start, goal, maxSize=64) => {
     pos.forEach(([dx, dy]) => {
       var man = Math.abs(goalX - (x+dx)) + Math.abs(goalY - (y+dy))
 
-      if (seen[[x+dx,y+dy]])
+      if (seen[[x+dx,y+dy]] <= moves + 1)
         return
-      seen[[x+dx,y+dy]] = true
+      seen[[x+dx,y+dy]] = moves + 1
 
       states.push([x+dx, y+dy, moves + 1])
-      queue.push(states.length-1, moves+1)
+      queue.push(states.length-1, moves + 1 + man)
     })
 
   }
@@ -179,19 +179,16 @@ const simulate = (map, units, prints, part2) => {
 }
 
 const part1 = (input) => {
-  printed = {}
   var [map, units] = parseInput(input)
 
   return simulate(map, units)
 }
 
 const part2 = (input) => {
-  printed = {}
   var [map, units] = parseInput(input)
 
   var high = 100
   var low = 4
-  var i = 0
   while (high > low) {
     var mid = Math.ceil((high + low)/2)
     try {
