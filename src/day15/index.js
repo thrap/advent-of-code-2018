@@ -26,8 +26,7 @@ const parseInput = rawInput => {
 
 const aStar = (grid, start, goal, maxSize=64) => {
   const [goalX, goalY] = goal
-
-  const states = [[...start, 0, 0]]
+  const states = [[...start, 0]]
   var queue = new heapify.MinQueue(maxSize)
   queue.push(0, 0)
 
@@ -43,9 +42,10 @@ const aStar = (grid, start, goal, maxSize=64) => {
     pos.forEach(([dx, dy]) => {
       var man = Math.abs(goalX - (x+dx)) + Math.abs(goalY - (y+dy))
 
-      if (seen[[x+dx,y+dy]] <= moves + 1)
+      var key = grid.length*(x+dx) + y+dy
+      if (seen[key] <= moves + 1)
         return
-      seen[[x+dx,y+dy]] = moves + 1
+      seen[key] = moves + 1
 
       states.push([x+dx, y+dy, moves + 1])
       queue.push(states.length-1, moves + 1 + man)
@@ -111,7 +111,6 @@ const simulate = (map, units, prints, part2) => {
        * */
       if (minLength < manhattan(pos, unitPos))
         return [0, Infinity]
-
       const distance = aStar(gridStr, unitPos, pos)
       minLength = Math.min(minLength, distance)
       return [pos, distance]
