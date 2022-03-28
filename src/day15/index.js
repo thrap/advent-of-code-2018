@@ -189,26 +189,31 @@ const part2 = (input) => {
   printed = {}
   var [map, units] = parseInput(input)
 
-  return simulate(map, units.map(u => u.type == 'E' ? {...u, attack:25} : u), false, true)
+  var high = 100
+  var low = 4
+  var i = 0
+  while (high > low) {
+    var mid = Math.ceil((high + low)/2)
+    try {
+      simulate(map, units.map(u => u.type == 'E' ? {...u, attack:mid} : ({...u})), false, true)
+      high = mid-1
+    } catch (e) {
+      low = mid
+    }
+  }
+  while (true) {
+    try {
+      const sim = simulate(map, units.map(u => u.type == 'E' ? {...u, attack: low} : {...u}), false, true)
+      return sim
+    } catch {
+      low ++
+    }
+  }
 }
 
 run({
   part1: {
     tests: [
-      { input: `#######
-#E..G.#
-#...#.#
-#.G.#G#
-#######`, expected: '' },
-      { input: `#########
-#G..G..G#
-#.......#
-#.......#
-#G..E..G#
-#.......#
-#.......#
-#G..G..G#
-#########`, expected: '' },
 { input: `#######
 #G..#E#
 #E#E.E#
@@ -251,6 +256,43 @@ run({
   },
   part2: {
     tests: [
+      { input: `#######
+#.G...#
+#...EG#
+#.#.#G#
+#..G#E#
+#.....#
+#######`, expected: 4988},
+      { input: `#######
+#E..EG#
+#.#G.E#
+#E.##E#
+#G..#.#
+#..E#.#
+#######`, expected: 31284},
+      { input: `#######
+#E.G#.#
+#.#G..#
+#G.#.G#
+#G..#.#
+#...E.#
+#######`, expected: 3478},
+      { input: `#######
+#.E...#
+#.#..G#
+#.###.#
+#E#G#G#
+#...#G#
+#######`, expected: 6474},
+      { input: `#########
+#G......#
+#.E.#...#
+#..##..G#
+#...##..#
+#...#...#
+#.G...G.#
+#.....G.#
+#########`, expected: 1140},
     ],
     solution: part2,
   },
