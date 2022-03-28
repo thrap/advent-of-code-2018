@@ -188,24 +188,20 @@ const part2 = (input) => {
   var [map, units] = parseInput(input)
 
   var high = 100
-  var low = 4
+  var low = 3
+  const results = {}
   while (high > low) {
     var mid = Math.ceil((high + low)/2)
     try {
-      simulate(map, units.map(u => u.type == 'E' ? {...u, attack:mid} : ({...u})), false, true)
+      const res = simulate(map, units.map(u => u.type == 'E' ? {...u, attack:mid} : ({...u})), false, true)
+      results[mid] = res
       high = mid-1
     } catch (e) {
       low = mid
     }
   }
-  while (true) {
-    try {
-      const sim = simulate(map, units.map(u => u.type == 'E' ? {...u, attack: low} : {...u}), false, true)
-      return sim
-    } catch {
-      low ++
-    }
-  }
+
+  return results[Math.min(...Object.keys(results))]
 }
 
 run({
