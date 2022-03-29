@@ -3,7 +3,7 @@ import run from "aocrunner"
 const re = /Before: (.*)\n(\d+) (\d+) (\d+) (\d+)\nAfter:  (.*)/
 const parseInput = rawInput => {
   const [samples, program] = rawInput.split(/\n\n\n\n/)
-  return samples.split('\n\n')
+  return [samples.split('\n\n'), program.split('\n')]
 }
 
 const addi = (a, b, c, reg) => reg[c] = reg[a] + b
@@ -36,7 +36,7 @@ const inst = {
 }
 
 const part1 = (rawInput) => {
-  const input = parseInput(rawInput)
+  const [samples] = parseInput(rawInput)
 
   const test = (reg, f, expected) => {
     const copy = [...reg.map(x => x)]
@@ -44,7 +44,7 @@ const part1 = (rawInput) => {
     return copy.join() == expected.join()
   }
 
-  return input.map(block => {
+  return samples.map(block => {
     const match = block.match(re)
     const reg = eval(match[1])
     const i = +match[2]
@@ -59,31 +59,59 @@ const part1 = (rawInput) => {
 }
 
 const part2 = (rawInput) => {
-  const input = parseInput(rawInput)
+  const [samples, program] = parseInput(rawInput)
 
-  return
+  const test = (reg, f, expected) => {
+    const copy = [...reg.map(x => x)]
+    f(copy)
+    return copy.join() == expected.join()
+  }
+
+  const possible = [...Array(16)].map(_ => Object.keys(inst))
+
+  samples.map(block => {
+    const match = block.match(re)
+    const reg = eval(match[1])
+    const i = +match[2]
+    const a = +match[3]
+    const b = +match[4]
+    const c = +match[5]
+    const expected = eval(match[6])
+
+    const candidates = Object.keys(inst).filter(key => {
+      return test(reg, (reg) => inst[key](a,b,c, reg), expected)
+    })
+
+    possible[i] = possible[i].filter(x => candidates.includes(x))
+  })
+
+  const map = (certain) => {
+    possible.forEach((x, i) => {
+      const pos = x.filter(l => !Object.values(certain).includes(l))
+      if (pos.length == 1) {
+        certain[i] = pos[0]
+        map(certain)
+      }
+    })
+    return certain
+  }
+
+  const mapping = map({})
+
+  const reg = [0, 0, 0, 0]
+  program.forEach(l => {
+    const [i, a, b, c] = l.split(' ').map(x => +x)
+    inst[mapping[i]](a, b, c, reg)
+  })
+
+  return reg[0]
 }
 
-const part1Input = `Before: [3, 2, 1, 1]
-9 2 1 2
-After:  [3, 2, 2, 1]
-
-
-
-9 2 0 1`
-const part2Input = part1Input
 run({
   part1: {
-    tests: [
-      { input: part1Input, expected: 1 },
-    ],
     solution: part1,
   },
   part2: {
-    tests: [
-      { input: part2Input, expected: '' },
-    ],
     solution: part2,
   },
-  onlyTests: false,
 })
