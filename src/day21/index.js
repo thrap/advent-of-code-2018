@@ -29,7 +29,7 @@ const inst = {
   addi, addr, muli, mulr, bani, banr, bori, borr, seti, setr, gtir, gtri, gtrr, eqir, eqri, eqrr
 }
 
-const execute = (input, reg0, limit) => {
+const execute = (input, reg0, limit, printCalls = false) => {
   const [i, program] = parseInput(input)
   const reg = Array(6).fill(0)
   reg[0] = reg0
@@ -37,52 +37,66 @@ const execute = (input, reg0, limit) => {
   const calls = {}
   program.forEach((_, i) => calls[i] = 0)
   for (var j = 0; j < limit; j++) {
-    calls[reg[i]]++
-    /*if ((j+1) % 100000 == 0) {
-      console.log(reg[i], ins, a, b, c, reg);
-    }*/
-    var start
-    if (reg[2] == 18) {
-      reg[4] = reg[1] + 1
-      reg[4] = reg[4] * 256
-      j+=3
-      if (reg[4] > reg[3]) {
-        /*console.log(j, start, ((j-start[0])/start[1]));
-        console.log(reg[1] == Math.floor(reg[3]/256));*/
-        if (start[2] != j) {
-          console.log(start[2]);
-          console.log(j);
-          throw 1
-        }
-        start = null
-        if (reg[1] != Math.floor(reg[3]/256)) throw 1
-        reg[4] = 1
-        reg[2] = 23
-      } else {
-        const missing = Math.floor(reg[3]/256) - reg[1]
-        if (!start)
-          start = [j, missing, j+7*missing]
-        if (true) {
-          reg[1] = Math.floor(reg[3]/256)
-          j+=7*missing
-          j-=7
-        } else {
-          reg[1]++
-        }
-        reg[4] = 0
-        reg[2] = 18
-        j+=3
+    if (!program[reg[i]]) {
+      if (printCalls) {
+        console.log(calls)
+        console.log(reg);
       }
-    } else if (reg[2] == 23) {
-      reg[2] = 26
-    }else {
-      if (!program[reg[i]]) return j
+      return j
+    }
+
+    calls[reg[i]]++
+    if (reg[2] == 18) {
+      if (reg[4] <= reg[3]) {
+        const missing = Math.floor(reg[3]/256) - reg[1]
+        reg[1] = Math.floor(reg[3]/256)
+        j+=7*missing
+      }
+      reg[4] = 1
+      reg[3] = reg[1]
+      reg[2] = 8
+      j+=6
+    } else if (reg[2] == 8) {
+      /*
+      (16777215).toString(2)
+      '111111111111111111111111'
+      */
+      //reg[1] = reg[3] & 255
+      reg[1] = reg[3] % 256
+      reg[5] = reg[1] + reg[5]
+      reg[5] = reg[5] % 16777216
+      reg[5] = reg[5] * 65899
+      //reg[5] = reg[5] & 16777215
+      reg[5] = reg[5] % 16777216
+      reg[1] = 256 > reg[3] ? 1 : 0
+      if (256 > reg[3]) {
+        reg[1] = reg[5] == reg[0] ? 1 : 0
+        if (reg[5] == reg[0]) {
+          reg[2] = 31
+          //return j+7
+          /** HER ER DEN FERDIG */
+        } else {
+          j+=3
+          reg[3] = reg[5] | 65536
+          reg[5] = 9010242
+          reg[2] = 8
+        }
+      } else {
+        reg[1] = Math.floor(reg[3]/256)
+        j+=7*reg[1]
+        reg[4] = 1
+        reg[3] = reg[1]
+        reg[2] = 8
+        j+=6
+      }
+      j+=9
+    } else {
       const [ins, a, b, c] = program[reg[i]]
       inst[ins](a, b, c, reg)
       reg[i]++
     }
   }
-  if (false) {
+  if (printCalls) {
     const expected = [ 15, 46498, 18, 11903730, 0, 2656444 ]
     console.log(calls);
     console.log(j);
@@ -105,14 +119,6 @@ const executeBrute = (input, reg0, limit) => {
     const [ins, a, b, c] = program[reg[i]]
     inst[ins](a, b, c, reg)
     reg[i]++
-  }
-  if (false) {
-    const expected = [ 15, 46498, 18, 11903730, 0, 2656444 ]
-    console.log(calls);
-    console.log(j);
-    console.log(reg);
-    console.log(expected);
-    console.log(reg.join() == expected.join());
   }
   return j
 }
@@ -141,20 +147,52 @@ const part1 = (rawInput) => {
   }
   // 973912 too low
   return answer*/
-  console.log(execute(rawInput, 973912, 5587661));
-  console.log(executeBrute(rawInput, 973912, 5587661));
-  console.log(execute(rawInput, 2475507, 5587661));
-  console.log(executeBrute(rawInput, 2475507, 5587661));
-  console.log(execute(rawInput, 5500417, 5587661));
-  console.log(executeBrute(rawInput, 5500417, 5587661));
-  console.log(execute(rawInput, 6619857, 5587661));
-  console.log(executeBrute(rawInput, 6619857, 5587661));
+
+  test(rawInput, 973912, 5687661)
+  test(rawInput, 2475507, 5587661)
+  test(rawInput, 5500417, 5587661)
+  test(rawInput, 6619857, 5587361)
+  //test(rawInput, 10, 5587673)
+  test(rawInput, 10, 5616100)
   return 6619857
 }
 
-const part2 = (rawInput) => {
-  const input = parseInput(rawInput)
+const test = (rawInput, i, upper = 5587661) => {
+  const a = execute(rawInput, i, upper)
+  const b = executeBrute(rawInput, i, upper)
+  if (a != b) {
+    console.log("ULIKE");
+    console.log(i);
+    console.log(a);
+    console.log(b);
+    throw 1
+  }
+}
 
+const part2 = (rawInput) => {
+  var limit = 10000000000
+  /*var answer
+  for(var j = 0; j < 1000000; j++) {
+    if (j % 100 == 0)
+      console.log(j);
+    const ans = execute(rawInput, j, limit)
+    if (ans < limit) {
+      console.log(j, ans);
+      answer = j
+      console.log(execute(rawInput, 712));
+      console.log("HURRA", j);
+    }
+  }*/
+
+  console.log(execute(rawInput, 6619857, 100000000000, true))
+  console.log(execute(rawInput, 7061, 100000000000, true))
+  console.log(execute(rawInput, 712, 100000000000, true))
+  console.log(execute(rawInput, 952, 100000000000, true))
+  console.log(execute(rawInput, 2312, 100000000000, true))
+  console.log(execute(rawInput, 2975, 100000000000, true))
+  console.log(execute(rawInput, 2312, 100000000000, true))
+  //console.log(execute(rawInput, 363, 100000000000, true))
+  console.log([6619857, 7061, 712, 952, 2312, 2975, 2312].map(x => x.toString(2)));
   return
 }
 
