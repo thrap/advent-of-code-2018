@@ -18,93 +18,84 @@ const part1 = (rawInput) => {
 const part2 = (rawInput) => {
   const nanobots = parseInput(rawInput)
 
-  const inRangeOf = ([x0, y0, z0], print) => {
-    const inRange = ([x, y, z, r]) => abs(x-x0) + abs(y-y0) + abs(z-z0) <= r
-    const slingring = ([x, y, z, r]) => [abs(x-x0) + abs(y-y0) + abs(z-z0) - r, [x, y, z, r]]
-    if (print) {
-      const missing = nanobots.filter(p => !inRange(p)).map(slingring).sort((a, b) => a[0]-b[0])
-      const included = nanobots.filter(p => inRange(p)).map(slingring).sort((a, b) => b[0]-a[0])
-      console.log(missing.slice(0, 40))
-      console.log(included.slice(0, 15));
-    }
-    return nanobots.filter(inRange).length
+  const inRangeOf = ([x0, y0, z0]) => {
+    var count = 0
+    nanobots.forEach(([x, y, z, r]) => {
+      if (abs(x-x0) + abs(y-y0) + abs(z-z0) <= r)
+        count++
+    })
+    return count
   }
 
   const distanceToNext = ([x0, y0, z0]) => {
-    const inRange = ([x, y, z, r]) => abs(x-x0) + abs(y-y0) + abs(z-z0) <= r
-    const slingring = ([x, y, z, r]) => abs(x-x0) + abs(y-y0) + abs(z-z0) - r
-    const missing = nanobots.filter(p => !inRange(p)).map(slingring).sort((a, b) => a-b)[0]//.slice(0, 10).reduce((acc, x) => acc + x)
-    return missing
+    var min = Number.MAX_VALUE
+    nanobots.forEach(([x, y, z, r]) => {
+      const man = abs(x-x0) + abs(y-y0) + abs(z-z0)
+      if (man > r)
+        min = Math.min(min, man - r)
+    })
+    return min
   }
 
-  const distanceToNextall = ([x0, y0, z0]) => {
-    const inRange = ([x, y, z, r]) => abs(x-x0) + abs(y-y0) + abs(z-z0) <= r
-    const slingring = ([x, y, z, r]) => abs(x-x0) + abs(y-y0) + abs(z-z0) - r
-    const missing = nanobots.filter(p => !inRange(p)).map(slingring).sort((a, b) => a-b)
-    return missing
-  }
-
-  var [xMax, yMax, zMax] = [ 11309240, 15032338, 25143064 ]
+  var [xMax, yMax, zMax] = [ 31309239, 15032089, 25143312 ]
   var max = inRangeOf([ xMax, yMax, zMax ])
   var min = xMax + yMax + zMax
-
-  var minDist = distanceToNextall([xMax, yMax, zMax])
-  for (var factor = Math.pow(10, 8); factor >= 1; factor /= 10) {
+  var minDist = distanceToNext([xMax, yMax, zMax])
+  var changed = true
+  const seen = {}
+  var maxFactor = Math.pow(10, 8)
+  while (changed) {
+    var biggestFactor = 0
+    changed = false
     var best = [xMax, yMax, zMax]
-    console.log(factor);
-    for (var dx = -10; dx <= 10; dx++) {
-      for (var dy = -10; dy <= 10; dy++) {
-        for (var dz = -10; dz <= 10; dz++) {
-          const pos = [xMax+factor*dx, yMax+factor*dy, zMax+factor*dz]
-          const inRangeOfDx = inRangeOf(pos)
-          if (inRangeOfDx > max) {
-            console.log("NY REKORD:", pos);
-            console.log("Antall:", inRangeOfDx);
-            min = pos[0]+pos[1]+pos[2]
-            max = inRangeOfDx
-          }
-          if (inRangeOfDx >= max) {
-            min = pos[0]+pos[1]+pos[2]
-            max = inRangeOfDx
-            console.log(dx, dy, dz, inRangeOfDx);
-            const nextDist = distanceToNextall(pos)
-            if (nextDist <= minDist) {
-              minDist = nextDist
+    if (seen[best]) break
+    seen[best] = true
+    for (var factor = maxFactor; factor >= 1; factor /= 10) {
+      console.log(factor);
+      for (var dx = -9; dx <= 9; dx++) {
+        for (var dy = -9; dy <= 9; dy++) {
+          for (var dz = -9; dz <= 9; dz++) {
+            if (dx == 0 && dy == 0 && dz == 0) continue
+            const pos = [xMax+factor*dx, yMax+factor*dy, zMax+factor*dz]
+            const inRangeOfDx = inRangeOf(pos)
+            if (inRangeOfDx > max) {
+              console.log("NY REKORD:", pos);
+              console.log("Antall:", inRangeOfDx);
+              min = pos[0]+pos[1]+pos[2]
+              max = inRangeOfDx
+              minDist = Number.MAX_VALUE
               best = pos
+              changed = true
             }
-          }
-          if (inRangeOfDx == max && min > pos[0]+pos[1]+pos[2]) {
-            min = pos[0]+pos[1]+pos[2]
-            console.log("Ny min:", min);
+            if (inRangeOfDx >= max) {
+              const nextDist = distanceToNext(pos)
+              if (nextDist <= minDist) {
+                minDist = nextDist
+                changed = true
+                biggestFactor = Math.max(biggestFactor, factor)
+                best = pos
+              }
+            }
+            if (inRangeOfDx == max && min > pos[0]+pos[1]+pos[2]) {
+              min = pos[0]+pos[1]+pos[2]
+              console.log("Ny min:", min);
+            }
           }
         }
       }
     }
+    maxFactor = biggestFactor;
     [xMax, yMax, zMax] = best
   }
 
   return min
 }
 
-const part1Input = `pos=<0,0,0>, r=4
-pos=<1,0,0>, r=1
-pos=<4,0,0>, r=3
-pos=<0,2,0>, r=1
-pos=<0,5,0>, r=3
-pos=<0,0,3>, r=1
-pos=<1,1,1>, r=1
-pos=<1,1,2>, r=1
-pos=<1,3,1>, r=1`
-const part2Input = part1Input
 run({
   part1: {
-    tests: [
-      { input: part1Input, expected: '' },
-    ],
     solution: part1,
   },
   part2: {
     solution: part2,
   },
-  onlyTests: false,
 })
